@@ -39,6 +39,7 @@ Web app where an emergency worker can input a new message and get classification
 3. Go to http://0.0.0.0:3001/
 
 ### Code structure
+'''
 - app
 | - template
 | |- master.html  # main page of web app
@@ -56,3 +57,4 @@ Web app where an emergency worker can input a new message and get classification
 |- classifier.pkl  # saved model 
 
 - README.md
+'''
