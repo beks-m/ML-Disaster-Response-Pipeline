@@ -15,6 +15,9 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import GridSearchCV
 
 def load_data(database_filepath):
+    """
+    Loads data from database with clean data
+    """
     engine = create_engine('sqlite:///' + database_filepath)
     df = pd.read_sql_table('table', engine)
     X = df.iloc[:, 1]
@@ -22,18 +25,23 @@ def load_data(database_filepath):
     cat_names = list(Y)
     return X, Y, cat_names
 
-
 def tokenize(text):
+    """
+    Splits text into transformed tokens
+    """
+    # get list of all urls using regex
     url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    # replace each url in text string with placeholder
     detected_urls = re.findall(url_regex, text)
     for url in detected_urls:
         text = text.replace(url, "urlplaceholder")
-
+    # tokenize text     
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
 
     clean_tokens = []
     for tok in tokens:
+        # lemmatize, normalize case, and remove leading/trailing white space
         clean_tok = lemmatizer.lemmatize(tok).lower().strip()
         clean_tokens.append(clean_tok)
 
@@ -41,11 +49,17 @@ def tokenize(text):
 
 
 def build_model():
+    """
+    Builds ML model using GridSearch on parameters
+    """
+    # establish model
     pipeline = Pipeline([
-        ('vect', CountVectorizer(tokenizer=tokenize)),
+        ('vect', CountVectorizer(tokenizer=tokenize)), 
         ('tfidf', TfidfTransformer()),
         ('clf', MultiOutputClassifier(RandomForestClassifier())),
     ])
+    
+    # Find the best parameters
     parameters = {
         'vect__ngram_range': ((1, 1), (1, 2)),
         'vect__max_df': (0.5, 0.75, 1.0),
@@ -56,12 +70,19 @@ def build_model():
     return cv
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    """
+    Evaluate the previously trained model
+    And output accuracy, precision and recall for every category
+    """
     Y_pred = model.predict(X_test)
     for i in range(0, len(category_names)):
         print("Label:", category_names[i])
         print(classification_report(Y_test.iloc[:,i], Y_pred[:,i]))
 
 def save_model(model, model_filepath): 
+    """
+    Save the model to a pickle
+    """
     pickle.dump(model, open(model_filepath, 'wb'))
 
 

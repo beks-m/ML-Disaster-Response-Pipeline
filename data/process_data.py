@@ -4,9 +4,16 @@ from sqlalchemy import create_engine
 import numpy as np
 
 def load_data(messages_filepath, categories_filepath):
+    """
+    Loads data from two csv files,
+    containing messages and categories, 
+    into single pandas dataframe
+    """
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     df = messages.merge(categories, on='id', how='outer')
+    
+    # spliting categories into columns
     categories = categories['categories'].str.split(pat=';', expand=True)
     row = categories.iloc[0]
     category_colnames = row.str.slice(stop=-2)
@@ -21,11 +28,17 @@ def load_data(messages_filepath, categories_filepath):
     return df
 
 def clean_data(df):
+    """
+    Return dataframe cleaned from inifinities, NaNs and duplicates
+    """
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
     df.fillna(0, inplace=True)
     return df.drop_duplicates()
 
 def save_data(df, database_filename):
+    """
+    Save data into sqlite database
+    """
     engine = create_engine('sqlite:///' + database_filename)
     df.to_sql('table', engine, index=False)
 
